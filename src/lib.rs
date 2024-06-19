@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate alloc;
+extern crate trusted_setup_macro;
 
 pub mod consts;
 pub mod dtypes;

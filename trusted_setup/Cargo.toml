@@ -1,0 +1,12 @@
+[package]
+name = "trusted_setup_macro"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hex = "0.4.3"
+quote = "1.0.36"
+sp1-derive = { git = "https://github.com/succinctlabs/sp1.git", branch = "main" }
+
+[lib]
+proc-macro = true

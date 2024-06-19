@@ -1,3 +1,6 @@
+extern crate trusted_setup_macro;
+use trusted_setup_macro::include_trusted_setup_file;
+
 use bls12_381::{G1Affine, G2Affine};
 use once_cell::sync::Lazy;
 
@@ -8,6 +11,7 @@ use crate::{
 };
 
 const TRUSTED_SETUP_FILE: &str = include_str!("trusted_setup.txt");
+include_trusted_setup_file!();
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct KzgSettings {
@@ -16,73 +20,74 @@ pub struct KzgSettings {
     pub(crate) g2_values: Vec<G2Affine>,
 }
 
-pub static TRUSTED_SETUP: Lazy<KzgSettings> = Lazy::new(|| {
-    KzgSettings::load_trusted_setup_file().expect("Failed to load trusted setup file")
-});
+// pub const TRUSTED_SETUP: Lazy<KzgSettings> = Lazy::new(|| {
+//     KzgSettings::load_trusted_setup_file().expect("Failed to load trusted setup file")
+// });
 
 impl KzgSettings {
     #[sp1_derive::cycle_tracker]
     pub fn load_trusted_setup_file() -> Result<Self, KzgError> {
-        let trusted_setup_file: Vec<String> = TRUSTED_SETUP_FILE
-            .to_string()
-            .split("\n")
-            .map(|x| x.to_string())
-            .collect();
+        load_trusted_setup_file()
+        // let trusted_setup_file: Vec<String> = TRUSTED_SETUP_FILE
+        //     .to_string()
+        //     .split("\n")
+        //     .map(|x| x.to_string())
+        //     .collect();
 
-        let num_g1_points = trusted_setup_file[0].parse::<usize>().unwrap();
-        let num_g2_points = trusted_setup_file[1].parse::<usize>().unwrap();
-        let g1_points_idx = num_g1_points + 2;
-        let g2_points_idx = g1_points_idx + num_g2_points;
+        // let num_g1_points = trusted_setup_file[0].parse::<usize>().unwrap();
+        // let num_g2_points = trusted_setup_file[1].parse::<usize>().unwrap();
+        // let g1_points_idx = num_g1_points + 2;
+        // let g2_points_idx = g1_points_idx + num_g2_points;
 
-        let g1_points: Vec<[u8; BYTES_PER_G1_POINT]> =
-            hex_to_bytes(&trusted_setup_file[2..g1_points_idx].join(""))
-                .unwrap()
-                .chunks_exact(BYTES_PER_G1_POINT)
-                .map(|chunk| {
-                    let mut array = [0u8; BYTES_PER_G1_POINT];
-                    array.copy_from_slice(chunk);
-                    array
-                })
-                .collect();
-        let g2_points: Vec<[u8; BYTES_PER_G2_POINT]> =
-            hex_to_bytes(&trusted_setup_file[g1_points_idx..g2_points_idx].join(""))
-                .unwrap()
-                .chunks_exact(BYTES_PER_G2_POINT)
-                .map(|chunk| {
-                    let mut array = [0u8; BYTES_PER_G2_POINT];
-                    array.copy_from_slice(chunk);
-                    array
-                })
-                .collect();
+        // let g1_points: Vec<[u8; BYTES_PER_G1_POINT]> =
+        //     hex_to_bytes(&trusted_setup_file[2..g1_points_idx].join(""))
+        //         .unwrap()
+        //         .chunks_exact(BYTES_PER_G1_POINT)
+        //         .map(|chunk| {
+        //             let mut array = [0u8; BYTES_PER_G1_POINT];
+        //             array.copy_from_slice(chunk);
+        //             array
+        //         })
+        //         .collect();
+        // let g2_points: Vec<[u8; BYTES_PER_G2_POINT]> =
+        //     hex_to_bytes(&trusted_setup_file[g1_points_idx..g2_points_idx].join(""))
+        //         .unwrap()
+        //         .chunks_exact(BYTES_PER_G2_POINT)
+        //         .map(|chunk| {
+        //             let mut array = [0u8; BYTES_PER_G2_POINT];
+        //             array.copy_from_slice(chunk);
+        //             array
+        //         })
+        //         .collect();
 
-        assert_eq!(g1_points.len(), num_g1_points);
-        assert_eq!(g2_points.len(), num_g2_points);
+        // assert_eq!(g1_points.len(), num_g1_points);
+        // assert_eq!(g2_points.len(), num_g2_points);
 
-        let mut kzg_settings = KzgSettings::default();
+        // let mut kzg_settings = KzgSettings::default();
 
-        let mut max_scale = 0;
-        while (1 << max_scale) < g1_points.len() {
-            max_scale += 1;
-        }
-        kzg_settings.max_width = 1 << max_scale;
+        // let mut max_scale = 0;
+        // while (1 << max_scale) < g1_points.len() {
+        //     max_scale += 1;
+        // }
+        // kzg_settings.max_width = 1 << max_scale;
 
-        g1_points.iter().enumerate().for_each(|(i, bytes)| {
-            let g1_affine = G1Affine::from_compressed_unchecked(bytes)
-                .expect("load_trusted_setup Invalid g1 bytes");
-            kzg_settings.g1_values.push(g1_affine);
-        });
-        g2_points.iter().enumerate().for_each(|(i, bytes)| {
-            let g2_affine = G2Affine::from_compressed_unchecked(bytes)
-                .expect("load_trusted_setup Invalid g2 bytes");
-            kzg_settings.g2_values.push(g2_affine);
-        });
+        // g1_points.iter().enumerate().for_each(|(i, bytes)| {
+        //     let g1_affine = G1Affine::from_compressed_unchecked(bytes)
+        //         .expect("load_trusted_setup Invalid g1 bytes");
+        //     kzg_settings.g1_values.push(g1_affine);
+        // });
+        // g2_points.iter().enumerate().for_each(|(i, bytes)| {
+        //     let g2_affine = G2Affine::from_compressed_unchecked(bytes)
+        //         .expect("load_trusted_setup Invalid g2 bytes");
+        //     kzg_settings.g2_values.push(g2_affine);
+        // });
 
-        let _ = is_trusted_setup_in_lagrange_form(&kzg_settings);
+        // let _ = is_trusted_setup_in_lagrange_form(&kzg_settings);
 
-        let bit_reversed_permutation = bit_reversal_permutation(kzg_settings.g1_values)?;
-        kzg_settings.g1_values = bit_reversed_permutation;
+        // let bit_reversed_permutation = bit_reversal_permutation(kzg_settings.g1_values)?;
+        // kzg_settings.g1_values = bit_reversed_permutation;
 
-        Ok(kzg_settings)
+        // Ok(kzg_settings)
     }
 }
 // #[sp1_derive::cycle_tracker]
@@ -132,6 +137,8 @@ fn is_trusted_setup_in_lagrange_form(kzg_settings: &KzgSettings) -> Result<(), K
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_bit_reversal_permutation() {
         let N = 16;
@@ -145,5 +152,17 @@ mod tests {
             let r = i.reverse_bits() >> (N.leading_zeros() + 1);
             assert_eq!(bit_reversed_permutation[r as usize], g1_values[i as usize]);
         }
+    }
+
+    #[test]
+    fn test_macro() {
+        let TRUSTED_SETUP_MACRO = match load_trusted_setup_file() {
+            Ok(kzg_settings) => kzg_settings,
+            Err(e) => {
+                eprintln!("Failed to load trusted setup file: {:?}", e);
+                panic!();
+            }
+        };
+        println!("{:?}", TRUSTED_SETUP_MACRO);
     }
 }
